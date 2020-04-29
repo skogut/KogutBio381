@@ -1,0 +1,218 @@
+---
+title: "Homework11"
+author: "Sophie Kogut"
+date: "4/8/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## Batch Processing
+1. Repeat the exercise from the Batch Processing Lecture (7th April), but do it using real data sets rather than purely simulated. Check with folks in your lab to see if there are multiple data sets available for analysis. Stick to simple data analyses and graphics, but try to set it up as a batch process that will work on multiple files and save summary results to a common file.
+If you can only find a data set, then simulate a couple of others by following the methods in Homework #6 by selecting appropriate statistical distributions and estimating parameters for those from the real data.
+
+Hopefully, this exercise will contribute to some actual work that you are trying to do in your research!
+
+```{r}
+# Batch processing to create graphs for SelectPos
+
+# load data ----------------------------------
+library(ggplot2)
+library(data.table)
+library(dplyr)
+
+load("/Users/skogut/Desktop/Thesis/SelectPosVACC.rda")
+SelectPos<- arrange(SelectPos, by= desc(Slope))
+SelectPos$ERV<- gsub("X", "", SelectPos$ERV)
+SelectPairs<- SelectPos[1:1000, 1:2]
+SelectPairs$ERV<- gsub("\\.", "-", SelectPairs$ERV)
+print(SelectPairs)
+
+
+Transcripts<- readRDS("Transcripts.RDS")
+ERV<- readRDS("ERV.RDS")
+# saveRDS(Transcripts, "Transcripts.RDS")
+# saveRDS(ERV, "ERV.RDS")
+
+dir.create("PositiveERV_Trans/")
+# Create files ----------------------------------
+# two sets of counts per file: 1 set from ERV, transcript per top 1000 pairs
+
+########################################################
+# FUNCTION file_builder
+# description: creates a sest of random files for regression
+# inputs: file_n = number f files to create
+#         file_folder = name of folder for random file
+#         file_size = c(min,max) number of rows in file
+#        file_NA= average number of NA values per column
+# outputs: creates a set of random files
+# -----------------------------------------------------
+file_builder <- function(file_n=1000,
+                         file_folder= "PositiveERV_Trans/",
+                         ERVdata= 1:1000,
+                         Transcriptdata= 1:1000,
+                         SelectPairs= 1:1000) {
+
+for (i in 1:nrow(SelectPairs)) {
+  
+  var_x<- SelectPairs[i,1] # ERV
+  var_y<-SelectPairs[i,2] # Transcript
+ 
+  
+
+   
+  df<- data.frame(var_x = ERVdata[[ which(colnames(ERVdata)== var_x)]], var_y= Transcriptdata[[which(colnames(Transcriptdata)== var_y)]]) # bind into a data frame
+  
+  colnames(df)<- c(var_x, var_y)
+  print(df)
+  
+  # create label for file name with padded zeroes
+  file_label<- paste(file_folder, "PairFile",
+                    formatC(i, 
+                          width=3,
+                             format= "d",
+                             flag= "0"),
+                             ".csv",
+                         sep="")
+  
+  # set up data file and incorporate time stamp and minimal meta data
+  write.table(cat("# Simulated random data filefor batch processing", "\n",
+                  "# timestamp: ", as.character(Sys.time()), 
+                  "\n",
+                   "# SEK", "\n",
+                 "#----------------------------", "\n",
+                   "\n",
+                   file=file_label,
+                   row.names= "",
+                   col.names= "",
+                   sep= "") )
+  
+  # now add the data frame
+  write.table(x=df,
+              file= file_label,
+              sep=",",
+              row.names= FALSE,
+              append=TRUE)
+  
+}
+
+}  # end of file_builder
+########################################################
+
+# Create regression function/ graphing function ----------------------------------
+########################################################
+# FUNCTION reg_stats
+# description: fits liner model extract m stats
+# inputs: 2column data frame (x and y)
+# outputs: slope, p-value, and r2
+# -----------------------------------------------------
+reg_stats <- function(d= NULL) {
+    if( is.null(d)){
+      x_var<- runif(10)
+      y_var<- runif(10)
+      d<- data.frame(x_var, y_var) }
+  
+  .<- lm(data=d, d[,2]~d[,1])
+  .<- summary(.)
+  stats_list<- list(Slope=.$coefficients[2,1],
+                    pval= .$coefficients[2,4],
+                    r2=.$r.squared)
+
+
+return(stats_list)
+
+}  # end of reg_stats
+########################################################
+# test
+
+
+#######################################################
+#global
+file_folder<- "PositiveERV_Trans/"
+n_files<- 100
+file_out<- "StatsSummaryHW.csv"
+file_names<- list.files(path= file_folder)
+#######################################################
+```
+
+```{r, results= "hide", warning= FALSE}
+# running file builder to build files
+file_builder(ERVdata = ERV, Transcriptdata = Transcripts, SelectPairs = SelectPairs)
+
+```
+
+```{r}
+
+# batch process by looping through individual files ----------------------------------
+
+# create data frame to hold summary stats
+ID<- seq_along(file_names)
+file_name<- file_names
+slope<- rep(NA, length(file_names))
+pval<- rep(NA, length(file_names))
+r2<- rep(NA, length(file_names))
+
+stats_out<- data.frame(ID, file_name, slope, pval, r2)
+
+
+# batch process by looping through individual files
+for(i in seq_along(file_names)) {
+  
+  data<- read.table(file=paste(file_folder, file_names[i],
+                               sep=""),
+                    sep=",", 
+                    header= TRUE)
+  
+  .<- reg_stats(d=data) # pull out regression stats from clean file
+  stats_out[i,3:5]<- unlist(.) # unlist, copy into last three  cols
+}
+
+# set up an output file and incorporate time stamp and minimal metadata
+
+write.table(cat( "# Summary stats for",
+                 "batch processing of regression models",
+                 "\n",
+                 "# timestamp: ", as.character(Sys.time()),
+                 "\n",
+                 file= file_out,
+                 row.names= "",
+                 col.names="",
+                 sep= ""))
+# set up an output file and incorporate time stamp and minimal metadata
+# now add the data frame
+write.table(x=stats_out,
+           file=file_out,
+           row.names=FALSE,
+           col.names=TRUE,
+           sep= ",",
+           append=TRUE)
+file_out<- "StatsSummaryHW.csv"
+
+# arranging data to find something meaningful
+
+stats_out<- arrange(stats_out, desc(r2))
+head(stats_out)
+
+# plotting quick scatterplots to look for outliers, in the top 50 pairs when ordered by r2
+
+for (i in 1:50) {
+data<- read.table(file=paste(file_folder, stats_out$file_name[i],
+                               sep=""),
+                    sep=",", 
+                    header= TRUE)
+p<- qplot(x=data[,1],
+      y=data[,2],
+      geom= c("smooth", "point"), method= "lm", 
+xlim= c(0, 25),
+ylim= c(0,10000))
+ print(i)
+print(p)
+
+ 
+ Sys.sleep(1.5)
+}
+
+
+```
+
+
+

@@ -1,0 +1,212 @@
+---
+title: "Homework7"
+author: "Sophie Kogut"
+date: "2/26/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## Creating Fake Data Sets To Explore Hypotheses
+
+Go back to your “thinking on paper” exercise, and decide on a pattern that you might expect in your experiment if a specific hypothesis were true.
+- If an ERV effects expression of the gene, we would expect a positive or negative linear regression line. If ERV is associated with ME/CFS, we would expect differential expression in cases vs.controls. 
+
+To start simply, assume that the data in each of your treatment groups follow a normal distribution. Specify the sample sizes, means, and variances for each group that would be reasonable if your hypothesis were true.
+- Fatigue scores
+- Cases: n= 29, mean= 7, sd= 3
+- Controls: n= 29, mean= 2, sd= 1
+
+Using the methods we have covered in class, write code to create a random data set that has these attributes. Organize these data into a data frame or tibble with the appropriate structure.
+
+Now write code to analyze the data (probably as an ANOVA or regression analysis, but possibly as a logistic regression or contingency table analysis. Write code to generate a useful graph of the data.
+
+Try running your analysis multiple times to get a feeling for how variable the results are with the same parameters, but different sets of random numbers.
+
+Now begin adjusting the means of the different groups. Given the sample sizes you have chosen, how small can the differences between the groups be (the “effect size”) for you to still detect a significant pattern (p < 0.05)?
+
+Alternatively, for the effect sizes you originally hypothesized, what is the minimum sample size you would need in order to detect a statistically significant effect? Again, run the model a few times with the same parameter set to get a feeling for the effect of random variation in the data.
+
+Write up your results in a markdown file, organized with headers and different code chunks to show your analysis. Be explicit in your explanation and justification for sample sizes, means, and variances.
+
+If you have time, try repeating this exercise with one of the more sophisticated distributions, such as the gamma or negative binomial (depending on the kind of data you have). You will have to spend some time figuring out by trial and error the parameter values you will need to generate appropriate means and variances of the different groups.
+
+# Simulating data for fatigue scores
+
+```{r}
+# Creating simulated dataframe for ERVs with a positive FC value
+n_group <- 2 # number of treatment groups
+n_name <- c("Cases", "Controls")
+n_size <- c(35, 23)
+n_mean <- c(7.3, 1.2)
+n_sd<- c(2,1)
+t_group <- rep(n_name, n_size)
+t_group
+table(t_group)
+
+id <- 1:(sum(n_size))
+
+res_var<- c(rnorm(n=n_size[1], mean= n_mean[1], sd=n_sd[1]),
+            rnorm(n=n_size[2], mean= n_mean[2], sd=n_sd[2]))
+ano_data<- data.frame(id, t_group, res_var)
+
+
+str(ano_data)
+ano_model<- aov(res_var~t_group, data=ano_data)
+
+print(ano_model)
+print(summary(ano_model))
+z<- summary(ano_model)
+aggregate(res_var~t_group, data=ano_data, FUN=mean)
+unlist(z)
+ano_sum<- list(Fval= unlist(z)[7],
+               probF= unlist(z)[9])
+```
+
+## ggplot for ANOVA of fatigue scores
+```{r}
+library(ggplot2)
+ano_plot <- ggplot(data=ano_data,
+                   aes(x= t_group,
+                       y= res_var,
+                       fill= t_group)) + 
+                        geom_boxplot()
+   # fill specifies grouping variables
+print(ano_plot)
+```
+
+## Running the code without changing parameters
+#### Run 1 Results:
+            Df Sum Sq Mean Sq F value Pr(>F)    
+t_group      1  505.9   505.9   166.8 <2e-16 ***
+Residuals   56  169.9     3.0             
+
+#### Run 2 Results: 
+            Df Sum Sq Mean Sq F value Pr(>F)    
+t_group      1  540.5   540.5   168.7 <2e-16 ***
+Residuals   56  179.4     3.2     
+
+#### Run 3 Results:
+           Df Sum Sq Mean Sq F value Pr(>F)    
+t_group      1  498.1   498.1     182 <2e-16 ***
+Residuals   56  153.3     2.7   
+
+Results are fairly consistent; the high F values indicate significant differences between the two groups.
+
+## Adjusting the mean
+What is the minimum difference between the groups that still yields a significant value? 
+```{r}
+n_group <- 2 # number of treatment groups
+n_name <- c("Cases", "Controls")
+n_size <- c(35, 23)
+n_mean <- c(5, 4)
+n_sd<- c(2,1)
+t_group <- rep(n_name, n_size)
+t_group
+table(t_group)
+
+id <- 1:(sum(n_size))
+
+res_var<- c(rnorm(n=n_size[1], mean= n_mean[1], sd=n_sd[1]),
+            rnorm(n=n_size[2], mean= n_mean[2], sd=n_sd[2]))
+ano_data<- data.frame(id, t_group, res_var)
+str(ano_data)
+ano_model<- aov(res_var~t_group, data=ano_data)
+print(ano_model)
+print(summary(ano_model))
+z<- summary(ano_model)
+aggregate(res_var~t_group, data=ano_data, FUN=mean)
+unlist(z)
+ano_sum<- list(Fval= unlist(z)[7],
+               probF= unlist(z)[9])
+print(ano_sum)
+```
+## Running the code several times
+#### Mean cases= 6, controls= 2
+F value1 
+111.3013 
+
+Pr(>F)1 
+6.338663e-15 
+(significant)
+
+#### Mean cases= 5, controls= 3
+F value1 
+32.92059 
+
+Pr(>F)1 
+4.045124e-07 
+(significant)
+
+#### Mean cases= 5, controls= 4
+F value1 
+2.903942 
+
+Pr(>F)1 
+0.0939066 
+(loss of significance)
+
+Conclusion: Cases with a mean score of 5 and controls with a mean score of 3 is the smallest (integer) difference between cases and control scores that still yields a significant F val.
+
+## Adjusting the sample sizes
+```{r}
+n_group <- 2 # number of treatment groups
+n_name <- c("Cases", "Controls")
+n_size <- c(2, 2)
+n_mean <- c(7.3, 1.2)
+n_sd<- c(2,1)
+t_group <- rep(n_name, n_size)
+t_group
+table(t_group)
+
+id <- 1:(sum(n_size))
+
+res_var<- c(rnorm(n=n_size[1], mean= n_mean[1], sd=n_sd[1]),
+            rnorm(n=n_size[2], mean= n_mean[2], sd=n_sd[2]))
+ano_data<- data.frame(id, t_group, res_var)
+str(ano_data)
+ano_model<- aov(res_var~t_group, data=ano_data)
+print(ano_model)
+print(summary(ano_model))
+z<- summary(ano_model)
+aggregate(res_var~t_group, data=ano_data, FUN=mean)
+unlist(z)
+ano_sum<- list(Fval= unlist(z)[7],
+               probF= unlist(z)[9])
+print(ano_sum)
+```
+
+## Running the code several times
+#### Sample size: 29 cases, 29 controls. Even split using real total sample size.
+F value1 
+277.2965 
+
+Pr(>F)1 
+2.367859e-23 
+(more significant than baseline)
+
+#### Sample size: 5 cases, 6 controls. Mostly even split, with fewer samples.
+F value1 
+47.72164 
+
+Pr(>F)1 
+7.003543e-05 
+(less significant than baseline)
+
+#### Sample size: 2 cases, 2 controls. Even split, with very few samples.
+F value1 
+35.24173 
+
+Pr(>F)1 
+0.02722212 
+(still significant, but less so)
+
+#### Sample size: 0 cases, 3 controls. No cases, so nothing to compare. 
+F value1 
+ 33.5115 
+
+Pr(>F)1 
+0.004425407 
+(still significant with 0 cases, unsure how that is possible but it tells me to be skeptical of my p-values)
+I cannot find an adequate combination of sample size values that gives me insignificant results, which is bad. 
+
+

@@ -1,0 +1,199 @@
+---
+title: "Homework6"
+author: "Sophie Kogut"
+date: "2/19/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## Generating Simulated Data
+```{r, warning= FALSE, message= FALSE}
+library(ggplot2) # for graphics
+library(MASS) # for maximum likelihood estimation
+
+
+# quick and dirty, a truncated normal distribution to work on the solution set
+
+z <- rnorm(n=3000,mean=0.2) # 3000 samples, mean of 0.2
+z <- data.frame(1:3000,z)
+names(z) <- list("ID","myVar")
+z <- z[z$myVar>0,]
+str(z)
+summary(z$myVar)
+
+```
+### Plot histogram of data
+```{r, warning= FALSE, message= FALSE}
+p1 <- ggplot(data=z, aes(x=myVar, y=..density..)) +
+  geom_histogram(color="grey60",fill="cornsilk",size=0.2) 
+print(p1)
+# Histogram; y is rescaled from counts to density, area under the curve = 1
+
+# Add empirical density curve
+
+p1 <-  p1 +  geom_density(linetype="dotted",size=0.75)
+print(p1)
+# Curve is fitted to data, does not assume any particular probability dist but smooths the shape
+
+# Get maximum likelihood parameters for normal
+
+normPars <- fitdistr(z$myVar,"normal")
+print(normPars)
+str(normPars)
+normPars$estimate["mean"] # note structure of getting a named attribute, requires ""
+
+# Plot normal probability density
+
+meanML <- normPars$estimate["mean"]
+sdML <- normPars$estimate["sd"]
+# maximum likelihood parameters to be passed to stat_function()
+xval <- seq(0,max(z$myVar),len=length(z$myVar))
+
+stat <- stat_function(aes(x = xval, y = ..y..), fun = dnorm, colour="red", n = length(z$myVar), args = list(mean = meanML, sd = sdML))
+ p1 + stat
+# normal is symmetric, does not fit this data well because data >0
+
+ # Plot exponential probability density
+ 
+expoPars <- fitdistr(z$myVar,"exponential")
+rateML <- expoPars$estimate["rate"]
+
+stat2 <- stat_function(aes(x = xval, y = ..y..), fun = dexp, colour="blue", n = length(z$myVar), args = list(rate=rateML))
+ p1 + stat + stat2
+# exponential also does not fit perfectly
+ 
+# Plot uniform probabilty density
+ 
+stat3 <- stat_function(aes(x = xval, y = ..y..), fun = dunif, colour="darkgreen", n = length(z$myVar), args = list(min=min(z$myVar), max=max(z$myVar)))
+ p1 + stat + stat2 + stat3
+# uniform does not fit the data
+ 
+# Plot gamma probability density
+ 
+gammaPars <- fitdistr(z$myVar,"gamma")
+shapeML <- gammaPars$estimate["shape"]
+rateML <- gammaPars$estimate["rate"]
+
+stat4 <- stat_function(aes(x = xval, y = ..y..), fun = dgamma, colour="brown", n = length(z$myVar), args = list(shape=shapeML, rate=rateML))
+ p1 + stat + stat2 + stat3 + stat4
+# gamma is best fit so far
+
+# Plot beta probabilty density
+ 
+pSpecial <- ggplot(data=z, aes(x=myVar/(max(myVar + 0.1)), y=..density..)) +
+  geom_histogram(color="grey60",fill="cornsilk",size=0.2) + 
+  xlim(c(0,1)) +
+  geom_density(size=0.75,linetype="dotted")
+
+betaPars <- fitdistr(x=z$myVar/max(z$myVar + 0.1),start=list(shape1=1,shape2=2),"beta")
+shape1ML <- betaPars$estimate["shape1"]
+shape2ML <- betaPars$estimate["shape2"]
+
+statSpecial <- stat_function(aes(x = xval, y = ..y..), fun = dbeta, colour="orchid", n = length(z$myVar), args = list(shape1=shape1ML,shape2=shape2ML))
+pSpecial + statSpecial
+# data must be rescaled between 0-1 so they can be compared to beta, pretty close fit
+```
+
+
+## Using real data
+```{r, warning= FALSE, message= FALSE}
+# Dataset that includes the difference in R^2 between cases and controls obtained from a kinear model comparing 1 ERV and 1 gene transcript.
+z <- read.table("/Users/skogut/Desktop/Thesis/deltaRsq.csv",header=TRUE,sep=",", stringsAsFactors=FALSE)
+str(z)
+summary(z)
+
+```
+
+### Plot histogram of data
+```{r, warning= FALSE, message= FALSE}
+
+p1 <- ggplot(data=z, aes(x=Delta.R.2, y=..density..)) +
+  geom_histogram(color="goldenrod4",fill= "royalblue3", size=0.2) 
+print(p1)
+# Histogram; y is rescaled from counts to density, area under the curve = 1
+
+# Add empirical density curve
+
+p1 <-  p1 +  geom_density(linetype="dotted",size=0.75)
+print(p1)
+# Curve is fitted to data, does not assume any particular probability dist but smooths the shape
+
+# Get maximum likelihood parameters for normal
+
+normPars <- fitdistr(z$Delta.R.2,"normal")
+print(normPars)
+str(normPars)
+normPars$estimate["mean"] # note structure of getting a named attribute, requires ""
+
+# Plot normal probability density
+
+meanML <- normPars$estimate["mean"]
+sdML <- normPars$estimate["sd"]
+# maximum likelihood parameters to be passed to stat_function()
+xval <- seq(0,max(z$Delta.R.2),len=length(z$Delta.R.2))
+
+stat <- stat_function(aes(x = xval, y = ..y..), fun = dnorm, colour="red", n = length(z$Delta.R.2), args = list(mean = meanML, sd = sdML))
+ p1 + stat
+# normal is symmetric, does not fit this data well because data >0
+
+ # Plot exponential probability density
+ 
+expoPars <- fitdistr(z$Delta.R.2,"exponential")
+rateML <- expoPars$estimate["rate"]
+
+stat2 <- stat_function(aes(x = xval, y = ..y..), fun = dexp, colour="green", n = nrow(z), args = list(rate=rateML))
+ p1 + stat + stat2
+# exponential also does not fit perfectly
+ 
+# Plot uniform probabilty density
+ 
+stat3 <- stat_function(aes(x = xval, y = ..y..), fun = dunif, colour="yellow3", n = length(z$Delta.R.2), args = list(min=min(z$Delta.R.2), max=max(z$Delta.R.2)))
+ p1 + stat + stat2 + stat3
+# uniform does not fit the data
+ 
+# Plot gamma probability density
+ 
+gammaPars <- fitdistr(z$Delta.R.2,"gamma")
+shapeML <- gammaPars$estimate["shape"]
+rateML <- gammaPars$estimate["rate"]
+
+stat4 <- stat_function(aes(x = xval, y = ..y..), fun = dgamma, colour="orchid", n = nrow(z), args = list(shape=shapeML, rate=rateML))
+ p1 + stat + stat2 + stat3 + stat4
+
+
+# Plot beta probabilty density
+ 
+pSpecial <- ggplot(data=z, aes(x=Delta.R.2/(max(Delta.R.2 + 0.1)), y=..density..)) +
+  geom_histogram(color="grey60",fill="cornsilk",size=0.2) + 
+  xlim(c(0,1)) +
+  geom_density(size=0.75,linetype="dotted")
+
+betaPars <- fitdistr(x=z$Delta.R.2/max(z$Delta.R.2 + 0.1),start=list(shape1=1,shape2=2),"beta")
+shape1ML <- betaPars$estimate["shape1"]
+shape2ML <- betaPars$estimate["shape2"]
+
+statSpecial <- stat_function(aes(x = xval, y = ..y..), fun = dbeta, colour="orchid", n = length(z$Delta.R.2), args = list(shape1=shape1ML,shape2=shape2ML))
+pSpecial + statSpecial
+# data must be rescaled between 0-1 so they can be compared to beta, pretty close fit, do not know why orchid line is so big
+```
+Using the best-fitting distribution, go back to the code and get the maximum likelihood parameters. Use those to simulate a new data set, with the same length as your original vector, and plot that in a histogram and add the probability density curve. Right below that, generate a fresh histogram plot of the original data, and also include the probability density curve.
+
+### Simulating data: Exponential Distribution
+```{r, warning= FALSE, message= FALSE}
+# the exponential curve fits this data the best
+expoPars <- fitdistr(z$Delta.R.2,"exponential")
+rateML <- expoPars$estimate["rate"]
+print(expoPars)
+sim<- rexp(n= nrow(z),rate = rateML )
+sim<- as.data.frame(sim)
+str(sim)
+psim<- ggplot(data=sim, aes(x=sim, y=..density..)) +
+  geom_histogram(color="goldenrod4",fill= "steelblue1", size=0.2) 
+print(psim)
+xval <- seq(0,max(sim),len=nrow(sim))
+statE <- stat_function(aes(x = xval, y = ..y..), fun = dexp, colour="green", n = nrow(sim), args = list(rate=rateML))
+psim + statE
+p1+ stat2
+
+```
+Yes, my model is doing a good job of simulating the data. The curve fits the data pretty well and the the histogram looks pretty similar. 

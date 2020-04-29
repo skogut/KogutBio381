@@ -1,0 +1,173 @@
+---
+title: "Homework9"
+author: "Sophie Kogut"
+date: "3/25/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+Organizing Code With Structured Programming
+
+1.Use the code that you worked on in Homework #7 (creating fake data sets) , and re-organize it following the principles of structured programming. Do all the work in a single chunk in your R markdown file, just as if you were writing a single R script. Start with all of your annotated functions, preliminary calls, and global variables. The program body should be only a few lines of code that call the appropriate functions and run them in the correct order. Make sure that the output from one function serves as the input to the next. You can either daisy-chain the functions or write separate lines of code to hold elements in temporary variables and pass the along.
+
+2. Once your code is up and working, modify your program do something else: record a new summary variable, code a new statistical analysis, or create a different set of random variables or output graph. Do not rewrite any of your existing functions. Instead, copy them, rename them, and then modify them to do new things. Once your new functions are written, add some more lines of program code, calling a mixture of your previous functions and your new functions to get the job done.
+
+
+```{r}
+# Structured Programming ----------------------------------
+# # Pseudocode:
+# sim_anova_data() # simlating data for an anova test
+# calc_anova() # running an anova test with the simulated data
+# summarize_output() # choosing meaningful results from anova
+# graph_results() # graphing results
+
+# Global Variables/ load libraries ----------------------------------
+library(ggplot2)
+
+# Functions ----------------------------------
+########################################################
+# FUNCTION sim_anova_data
+# description: simulates fatigue scores for 35 cases and 23 controls
+# inputs: parameters for rnorm generated fatigue scores
+# outputs: rnorm generated faituge scores
+# -----------------------------------------------------
+sim_anova_data <- function(n_group = 2, # number of treatment groups
+                          n_name = c("Cases", "Controls"), # group names
+                          n_size = c(35, 23), # size of each group
+                          n_mean = c(7.3, 1.2), # mean score (1= low fatigue, 10= extreme                                fatigue) for each group
+                          n_sd = c(2,1)) { # standard deviation for each group
+
+t_group <- rep(n_name, n_size)
+
+id <- 1:(sum(n_size))
+
+res_var<- c(rnorm(n=n_size[1], mean= n_mean[1], sd=n_sd[1]),
+            rnorm(n=n_size[2], mean= n_mean[2], sd=n_sd[2]))
+ano_data<- data.frame(id, t_group, res_var)
+
+return(ano_data)
+
+}  # end of sim_anova_data
+########################################################
+
+########################################################
+# FUNCTION calc_anova
+# description: using data from the sim_anova_data function to run an anova
+# inputs: ano_data: id (individual), t_group(case or control), and res_var(response variable or fatigue score)
+# outputs: anova model
+# -----------------------------------------------------
+calc_anova <- function(id= 1:58,
+                       t_group= rep(0:1, 58),
+                       res_var= NULL,
+                       ano_data= NULL ) { # ano_data contains all three elements, or you can                          input separately
+
+
+ano_model<- aov(res_var~t_group, data=ano_data)
+
+return(ano_model)
+
+}  # end of calc_anova
+########################################################
+
+########################################################
+# FUNCTION summarize_output
+# description: summarizing the output of calc_anova
+# inputs: ano_model from calc_anova
+# outputs: ano_sum, which contains the F vallue and the probF value, also mean res var fr each group
+# -----------------------------------------------------
+summarize_output <- function(output= ano_model) {
+
+z<- summary(output)
+means<- aggregate(res_var~t_group, data=ano_data, FUN=mean)
+
+ano_sum<- list(Fval= unlist(z)[7],
+               probF= unlist(z)[9])
+summ_ano<- c(ano_sum, means)
+
+return(summ_ano)
+
+}  # end of summarize_output
+########################################################
+
+########################################################
+# FUNCTION graph_results
+# description: produces a boxplot to compare fatigue scores between case and control groups
+# inputs: data to plot (response variable and treatment group)
+# outputs: boxplot
+# -----------------------------------------------------
+graph_results <- function(data= ano_data) {
+
+ano_plot <- ggplot(data=ano_data,
+                   aes(x= t_group,
+                       y= res_var,
+                       fill= t_group)) + 
+                        geom_boxplot()
+
+return(print(ano_plot))
+
+}  # end of graph_results
+########################################################
+
+
+# Body ----------------------------------
+
+ano_data<- sim_anova_data()
+ano_model<- calc_anova(res_var= ano_data[,3], ano_data= ano_data)
+sum_output<- summarize_output(output=ano_model)
+print(sum_output)
+graph_results(ano_data)
+
+```
+
+Part 2: modifying functions
+```{r}
+# Modification 1: Selecting different values from output summary
+########################################################
+# FUNCTION summarize_output2.0
+# description: summarizing the output of calc_anova, but selecting different outputs
+# inputs: ano_model from calc_anova
+# outputs: ano_sum, which contains the degrees of freedom and sum of squares, also mean res var fr each group
+# -----------------------------------------------------
+summarize_output2.0 <- function(output= ano_model) {
+
+z<- summary(output)
+means<- aggregate(res_var~t_group, data=ano_data, FUN=mean)
+
+ano_sum<- list(DegreesFreedom= unlist(z)[1:2],
+               SumSq= unlist(z)[3:4])
+summ_ano<- c(ano_sum, means)
+
+return(summ_ano)
+
+}  # end of summarize_output2.0
+########################################################
+
+# Modification 2: Using a different graph to display results
+########################################################
+# FUNCTION graph_results_scatter
+# description: produces a scatterplot with geom jitter to compare fatigue scores between case and control groups
+# inputs: data to plot (response variable and treatment group)
+# outputs: scatter plot w jitter
+# -----------------------------------------------------
+graph_results_scatter <- function(data= ano_data) {
+
+ano_plot <- ggplot(ano_data, 
+                   aes(x=t_group, y=abs(res_var), 
+                       shape= t_group)) +
+            geom_jitter(aes(colour= t_group))
+
+
+return(print(ano_plot))
+
+}  # end of graph_results_scatter
+########################################################
+
+# Body 2.0 ----------------------------------
+ano_data<- sim_anova_data()
+ano_model<- calc_anova(res_var= ano_data[,3], ano_data= ano_data)
+sum_output2.0<- summarize_output2.0(output=ano_model)
+print(sum_output2.0)
+graph_results_scatter(ano_data)
+
+```
+

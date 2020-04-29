@@ -1,0 +1,57 @@
+---
+title: "Homework3"
+author: "Sophie Kogut"
+date: "1/29/2020"
+output: html_document
+---
+Question 1
+```
+Find:\s{2,}
+Replace:,
+# This regular expression says "find where there are 2 or more spaces, and replace these spaces with commas". This excludes single spaces and results in a csv compatible file. 
+```
+
+Question 2
+```
+Find:(\w+), (\w+), (\w+ \w+\s*\w+$)
+Replace:\2 \1 (\3)
+# This expression compartmentalizes the 3 parts of this line into last name, first name, institution. The replacement changes it to first name last name (institution).
+```
+
+Question 3
+```
+Find:p3\s 
+Replace:p3\n
+# This expression finds "p3 space" and replaces those spaces only with a line break.
+```
+
+Question 4
+```
+Find:(000\w)( \w* \w*\s*\w*\s*\w*)(\.m)
+Replace:\2_\1\3
+# This expression compartmentalizes the number ID, song title, and .mp3. The \s* and \w* are neccessary to indicate that the song titles have differing numbers of words (between 0 and more spaces/ characters).The replace line indicates the desired order of these elements, separated by an underscore. 
+```
+
+Question 5
+```
+Find:^(\w)\w+,(\w+),\d+.\d,(\d+)
+Replace:\1_\2,\3
+# This expression isolates the first letter of the genus name starting from the beginning of the line, the species name, and the 2nd numeric variable. The replacement includes the first letter of the genus underscore species name, 2nd number.
+```
+
+Question 6
+```
+Find: ^(\w)\w+,(\w{4})\w+,\d+.\d,(\d+)
+Replace:\1_\2,\3
+# This uses pretty much the same expression as Question 5, except the species name is being abbreviated to the first 4 word characters using \w{4}. 
+```
+
+Question 7
+```
+Find: ^(\w{3})\w+,(\w{3})\w+,(\d+.\d),(\d+)
+Replace: \1\2, \4, \3
+# This uses similar logic to Question 6, where \w{3} is used to retain only the first 3 letters of the genus and species names. Using \1\2 merges these into one word, and \4, \3 reverses the order of the 2 number variables. \d+.\d is used to indicate the digits before and after a decimal point. 
+```
+
+
+

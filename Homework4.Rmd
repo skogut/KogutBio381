@@ -1,0 +1,99 @@
+---
+title: "Homework4"
+author: "Sophie Kogut"
+date: "2/5/2020"
+output: html_document
+---
+Question 1: 
+``` {r}
+x<- 1.1
+a <- 2.2
+b<- 3.3
+z <- x^(a^b)
+print(z)
+
+z <- (x^a)^b
+print(z)
+
+z <- 3*x^3 + 2*x^2 +1 
+print(z)
+
+```
+
+Question 2:
+``` {r}
+? rep
+? seq
+# a.
+a<- c(seq(from= 1, to= 8, by= 1), seq(from= 7, to= 1) )
+print(a)    
+
+# b. 
+b<- seq(from= 1, to=5)
+b2 <- c(rep(b[1], 1), rep(b[2], 2), rep(b[3], 3), rep(b[4], 4), rep(b[5], 5))
+print(b2)
+
+# c.
+c <- c(rep(b[5], 1), rep(b[4], 2),  rep(b[3], 3), rep(b[2], 4), rep(b[1], 5))
+print(c)
+
+```
+
+Question 3: 
+
+Useful equations: 
+$$ r= sqrt(x^2 + y^2)$$ 
+$$ theta= atan(y/x)$$
+```{r}
+vec1<-runif(2)
+print(vec1)
+
+x <- vec1[1]
+y <- vec1[2]
+polar <- c(sqrt(x^2 + y^2), atan(y/x))
+print(polar)
+
+
+
+```
+
+Question 4:
+```{r}
+queue <- c("sheep", "fox", "owl", "ant")
+ark <-c()
+# a.
+queue <- c(queue, "serpent")
+print(queue)
+# b. 
+ark <- "sheep"
+queue <- queue[-1]
+print(queue)
+# c.
+queue <- c("donkey", queue)
+print(queue)
+# d.
+queue <- queue[-5]
+print(queue)
+# e. 
+queue <- queue[-3]
+print(queue)
+# f. 
+queue <- c(queue[1:2], "aphid", queue[3])
+print(queue)
+# or append function 
+? append
+append(queue, "aphid", after= 2)
+# g.
+which(queue[]== "aphid")
+# The aphid is 3rd in line.
+
+```
+
+Question 5:
+```{r}
+vec1<- seq(from= 1, to= 100)
+result<- which(vec1[] %% 2 != 0 & vec1[] %% 3 != 0 & vec1[] %% 7 != 0)
+print(result)
+
+```
+

@@ -1,0 +1,99 @@
+---
+title: "Homework12II"
+author: "Sophie Kogut"
+date: "4/28/2020"
+output: html_document
+---
+
+
+## Advanced ggplotting
+
+1. For this exerise, use your newly-developed ggplot chops to create some nice graphs from your own data (If you do not have a good data frame to use for graphics, use one of the many built-in data frames from R (other than mpg, which we are using in class)). Experiment with different themes, theme base sizes, aesthetics, mappings, and faceting. When you are finished, try exporting them to high quality pdfs, jpgs, eps files, or other formats that you would use for submission to a journal.
+
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+library(patchwork)
+library(data.table)
+library(dplyr)
+
+# load files --------------------------------------------------------------
+Pairs<- read.csv("/Users/skogut/Desktop/Thesis/JeffGenesResult.csv")
+Pairs<- arrange(Pairs, by= desc(`Adjusted.R.squared`))
+Names<- read.csv("/Users/skogut/Desktop/CompBio/KogutBio381/Infogenes.csv")
+
+SelectPairs<- Pairs[1:500, 2:3]
+SelectPairs$ERV<- gsub("\\.", "-", SelectPairs$ERV) 
+SelectPairs$ERV<- gsub("X", "", SelectPairs$ERV)
+SelectPairs$Transcript<- as.character(SelectPairs$Transcript)
+
+# files commented out are too large for github
+
+Info<- read.csv("/Users/skogut/Desktop/CompBio/KogutBio381//TopHandpicked.csv")
+
+########################################################
+# FUNCTION is_outlier
+# description: removes outliers from data
+# inputs: raw data
+# outputs: data minus outliers
+# -----------------------------------------------------
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
+} # end of is_outlier
+########################################################
+
+file_folder<- "/Users/skogut/Desktop/CompBio/KogutBio381/SelectedJeff/"
+n_files<- 100
+
+file_names<- list.files(path= file_folder)
+
+
+# Creating all plots with outliers removed
+# with outlier function
+
+
+
+for (i in 1:n_files) {
+  data<- read.table(file=paste(file_folder, file_names[i],
+                               sep=""),
+                    sep=",", 
+                    header= TRUE)
+out2<-is_outlier(data[,2])
+out3<- is_outlier(data[,3])
+
+dataN<- data
+
+for (j in 1:58) {
+if(out2[j]== FALSE){
+   dataN[j,2]= data[j,2] }
+  else {dataN[j,2]= NA
+  }
+  if(out3[j]== FALSE){
+   dataN[j,3]= data[j,3] }
+  else {dataN[j,3]= NA
+  }
+}
+
+ p1<- ggplot(data=dataN,
+              mapping= aes(x=dataN[,2], y=dataN[,3], color= dataN[,1])) +
+    geom_point() + stat_smooth(method= "lm") +
+    labs(title= c(paste(Names$Gene[i])),
+         x= paste(colnames(dataN[2])),
+         y= paste(colnames(dataN[3]))) + scale_color_brewer(palette= "Set1") + theme(legend.position= "bottom")
+  
+   p2<- ggplot(data= dataN, mapping= aes(x= dataN[,1], y= dataN[,2] )) + geom_boxplot(fill= I(c("red4", "blue3"))) +
+    labs( x= element_blank(),
+         y= paste(colnames(dataN[2]))) + scale_fill_brewer(palette= "Set1") 
+  
+  p3<- ggplot(data= dataN, mapping= aes(x= dataN[,1], y= dataN[,3] )) + geom_boxplot(fill= I(c("brown3", "royalblue"))) +
+    labs(
+         x= "status" ,
+         y= paste(colnames(dataN[3]))) 
+  print(i)
+ print( p1 | (p2 / p3))
+
+}
+
+```
+

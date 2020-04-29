@@ -1,0 +1,68 @@
+---
+title: "First Markdown"
+author: "Sophie Kogut"
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+$a + b$
+$$a + b$$
+$$\alpha + \beta$$
+$$S_a$$
+$$S_{a+b_{\alpha + \beta}}$$
+$$Z^{a + b}$$
+$$P(occurence of species A) = Z_A$$
+$$P(\mbox{occurence of species A}) = Z_A$$
+
+## R Markdown
+
+first line.   
+second line.   
+third line.  
+space space space
+
+```
+plain text and nothing else.
+$$\alpha + \beta$$
+```
+
+Use a single back tick ` for plain text in a sentence `.
+
+The value of $\pi$ is `r pi`.   
+
+```{r echo=TRUE, eval=FALSE}
+# comment!
+runif(10)
+```
+
+
+
+
+```{bash}
+Using shell commands
+pwd
+```
+```{r}
+
+```
+
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

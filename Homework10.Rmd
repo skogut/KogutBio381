@@ -1,0 +1,258 @@
+---
+title: "Homework10"
+author: "Sophie Kogut"
+date: "4/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+### For loops and randomization tests
+
+1. Using a for loop, write a function to calculate the number of zeroes in a numeric vector. Before entering the loop, set up a counter variable counter <- 0. Inside the loop, add 1 to counter each time you have a zero in the matrix. Finally, use return(counter) for the output.
+
+```{r}
+########################################################
+# FUNCTION count_zeroes
+# description: a function to calculate the number of zeroes in  numeric vector, using a for loop
+# inputs: numeric vector
+# outputs: total number of zeroes
+# -----------------------------------------------------
+count_zeroes <- function(vec= sample(0:5, 50, replace= TRUE)) {
+
+  counter<-0
+
+  for(i in 1:length(vec)) {
+    if(vec[i] == 0){
+      counter<- counter + 1
+    }
+  }
+
+return(counter)
+
+}  # end of count_zeroes
+########################################################
+test<- sample(0:5, 50, replace= TRUE)
+count_zeroes(vec= test)
+print(test)
+
+```
+
+
+2. Use subsetting instead of a loop to rewrite the function as a single line of code.
+```{r}
+########################################################
+# FUNCTION count_zeroes_subset
+# description: a function to calculate the number of zeroes in  numeric vector, using subsetting
+# inputs: numeric vector
+# outputs: total number of zeroes
+# -----------------------------------------------------
+count_zeroes_subset <- function(vec= sample(0:5, 50, replace= TRUE)) {
+
+ zeroes<- length(which(vec== 0))
+
+return(zeroes)
+
+}  # end of count_zeroes_subset
+########################################################
+count_zeroes_subset()
+
+
+```
+
+
+3. Write a function that takes as input two integers representing the number of rows and columns in a matrix. The output is a matrix of these dimensions in which each element is the product of the row number x the column number.
+
+```{r}
+########################################################
+# FUNCTION create_matrix
+# description: creating a matrix of desired dimensions where each element= the product of the row number* col number
+# inputs: nrow and ncol
+# outputs: matrix, elements= row number * col number
+# -----------------------------------------------------
+create_matrix <- function(nrow=2,
+                          ncol=3) {
+
+mat1<- matrix(nrow= nrow, ncol= ncol)
+
+for(i in 1:nrow){
+  for(j in 1:ncol){
+    mat1[i,j]<- i*j
+  }
+}
+
+return(mat1)
+
+}  # end of create_matrix
+########################################################
+create_matrix(nrow=6, ncol=7)
+
+
+
+```
+
+
+4. Use the code from the upcoming April 2nd lecture (Randomization Tests) to design and conduct a randomization test for some of your own data. You will need to modify the functions that read in the data, calculate the metric, and randomize the data. Once those are set up, the program should run correctly calling your new functions. Also, to make your analysis fully repeatable, make sure you set the random number seed at the beginning (use either set.seed() in base R, or char2seed in the TeachingDemos package
+```{r}
+# load libraries
+library(data.table)
+library(ggplot2)
+
+# Using fatigue scores for cases and controls
+set.seed(100)
+
+
+# Functions ----------------------------------
+# read in data
+####### ###########################################
+# function: readData
+# read in (or generate) data set for analysis
+# input: file name (or nothing)
+# output: 3 column data frame of observed data (ID,x,y)
+#------------------------------------------------- 
+read_data <- function(z= NULL) {
+
+if(is.null(z)) {
+  x_obs<- 1:20
+  y_obs<- x_obs +10*rnorm(20)
+  df<- data.frame(ID=seq_along(x_obs),
+                  x_obs,
+                  y_obs)}
+   df<- read.csv(file=z,
+                 header= TRUE,
+                 stringsAsFactors = FALSE)
+return(print(df))
+
+}  # end of read_data
+########################################################
+
+# calculate the metric
+##################################################
+# function: getMetric
+# calculate metric for randomization test
+# input: 2-column data frame for regression
+# output: regression slope
+#------------------------------------------------- 
+get_metric <- function(z=NULL) {
+    if(is.null(z)){
+      x_obs<- 1:20
+      y_obs<- x_obs + 10*rnorm(20)
+      z<- data.frame(ID=seq_along(x_obs),
+                     x_obs,
+                     y_obs) }
+for(i in 1:nrow(z)){
+  ifelse(z[i,3]== "case", z[i,3]<- 1, z[i,3]<- 0)
+}
+ .<- lm(z[,4]~z[,3])
+ . <- summary(.)
+ . <- .$coefficients[2,1]
+ slope<- .
+return(slope)
+
+}  # end of get_metric
+########################################################
+
+
+# randomize the data
+########################################################
+# FUNCTION shuffle_data
+# description: randomize data for regression analysis
+# inputs: 3 col data frame (ID, xvar, yvar)
+# outputs: 3 col data frame (ID, xvar, yvar)
+# -----------------------------------------------------
+shuffle_data <- function(z= NULL) {
+  if(is.null(z)){
+    x_obs<- 1:20
+    y_obs<- x_obs + 10*rnorm(20)
+    z<- data.frame(ID=seq_along(x_obs),
+                   x_obs,
+                   y_obs) }
+z_shuffle<- z
+z_shuffle[,4]<- sample(z_shuffle[,4])
+return(z_shuffle)
+
+}  # end of shuffle_data
+########################################################
+#z_shuffle<- shuffle_data(z=df)
+
+# get the p value
+########################################################
+# FUNCTION get_pval
+# description: calculate p value from simulation
+# inputs: list of observed metric and vector of simulated metrics
+# outputs: lower, upper til probabilty value
+# -----------------------------------------------------
+get_pval <- function(z=NULL) {
+  if(is.null(z)){
+   z<- list(rnorm(1), rnorm(1000))   }
+  p_lower <- mean(z[[2]]<= z[[1]])
+  p_upper <- mean(z[[2]]>=z[[1]])
+
+
+return(c(pL=p_lower, pU=p_upper))
+
+}  # end of get_pval
+########################################################
+
+
+########################################################
+# FUNCTION plot_ran_test
+# description: create a ggplot of histogram of simulated values
+# inputs: list of observed metric and vector simulated metric
+# outputs: saved ggplot graph
+# -----------------------------------------------------
+plot_ran_test <- function(z= NULL) {
+
+  if(is.null(z)) {
+    z<- list(rnorm(1), rnorm(1000)) }
+  
+  df<- data.frame(ID= seq_along(z[[2]]), sim_x=z[[2]])
+  p1<- ggplot(data=df, mapping=aes(x=sim_x))
+  p1 + geom_histogram(mapping=aes(fill=I("goldenrod"),
+                                  color=I("black"))) + geom_vline(aes(xintercept=z[[1]], col= "blue"))
+  
+
+}  # end of plot_ran_test
+########################################################
+
+# Code ----------------------------------
+n_sim<- 1000 # number of simulated data sets
+x_sim <- rep(NA, n_sim) # set up empty vector for simulated slopes
+
+df<- read_data(z="/Users/skogut/Desktop/Thesis/IDcaucfemale2.csv")
+
+x_obs<- get_metric(z=df)
+for (i in seq_len(n_sim)) {
+  x_sim[i] <- get_metric(shuffle_data(df)) # run simluation
+}
+slopes<- list(x_obs, x_sim)
+p_values<- get_pval(slopes)
+
+plot_ran_test(slopes)
+# interpretation: observed slope is significantly larger than sim
+```
+
+
+5. For comparison, calculate in R the standard statistical analysis you would use with these data. How does the p-value compare for the standard test versus the p value you estimated from your randomization test? If the p values seem very different, run the program again with a different starting seed (and/or increase the number of replications in your randomization test). If there are persistent differences in the p value of the standard test versus your randomization, what do you think is responsible for this difference?
+```{r}
+# Running a t test with real data
+y<- df[,4]
+x<- df[,3]
+tt<-t.test(y~x) # y is numeric, x is binary
+tt$p.value
+# 1.087095e-17
+# This p value is significantly smaller than the PL and PU estimated from the randomized test (1,0)
+# these p values upper and lower limits remain the same with set.seed() 10, 100, and 1000.
+
+# Running a t test with randomized data
+z_shuffle<-shuffle_data(df)
+y2<- z_shuffle[,4]
+x2<- z_shuffle[,3]
+tt2<- t.test(y2~x2)
+tt2$p.value
+# Trial 1: pvalue = 0.1176043
+# Trial 2: pvalue= 0.6825989
+# Trial 3: pvalue= 0.4882274
+
+# Each of these p values are insignificant and much higher than the p value observed from a t test with real data. This leads me to conclude that there is something signficant about the variation in fatigue scores between cases and control groups. This is expected, as fatigue is a hallmark symptom of ME/CFS, so it is unsurprising that case faituge scores are significantly different than control fatigue scores. 
+```
+

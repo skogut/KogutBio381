@@ -1,0 +1,43 @@
+---
+title: "Kogut Bio381"
+author: "Sophie Kogut"
+date: "1/22/2020"
+output: 
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+---
+# Homework links
+### Homework 1
+[Typora Document](HW1Typora2.html)
+
+### Homework 3
+[Regular Expressions](Homework3.html)
+
+### Homework 4
+[Vectors in R](Homework4.html)
+
+### Homework 5
+[Working with Matrices, Lists, and Data frames](Homework5.html)
+
+### Homework 6
+[Simulating and Fitting Data Distributions](Homework6.html)
+
+### Homework 7
+[Creating Fake Data Sets To Explore Hypotheses](Homework7.html)
+
+### Homework 8
+[Data Manipulations Using the dplyr Package](Homework8.html)
+
+### Homework 9
+[Organizing Code With Structured Programming](Homework9.html)
+
+### Homework 10
+[For Loops and Randomization Tests](Homework10.html)
+
+### Homework 11
+[Batch Processing](Homework11.html)
+
+### Homework 12
+[Advanced ggplotting](Homework12II.html)
+
